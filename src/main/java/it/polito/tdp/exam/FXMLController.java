@@ -5,8 +5,15 @@
 package it.polito.tdp.exam;
 
 import java.net.URL;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
+import org.jgrapht.alg.util.Pair;
+
+import it.polito.tdp.exam.model.Dettaglio;
 import it.polito.tdp.exam.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,10 +42,10 @@ public class FXMLController {
     private Button btnSimula; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbAnno"
-    private ComboBox<?> cmbAnno; // Value injected by FXMLLoader
+    private ComboBox<Integer> cmbAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbSquadra"
-    private ComboBox<?> cmbSquadra; // Value injected by FXMLLoader
+    private ComboBox<String> cmbSquadra; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -48,11 +55,75 @@ public class FXMLController {
 
     @FXML
     void handleCreaGrafo(ActionEvent event) {
+    	
+    	cmbAnno.getItems().clear();
+    	
+        String team = cmbSquadra.getValue() ;
+     	
+     	if(team.equals("")) {
+     		txtResult.setText("Inserire una squadra.\n");
+     		return ;
+     	}
+     	
+//    	creazione grafo
+    	this.model.creaGrafo(team);
+    	
+    	
+//    	stampa grafo
+    	this.txtResult.setText("Grafo creato.\n");
+    	this.txtResult.appendText("Ci sono " + this.model.nVertici() + " vertici\n");
+    	this.txtResult.appendText("Ci sono " + this.model.nArchi() + " archi\n\n");
+    	
+    	Set<Integer> vertici = this.model.getVertici();
+    	List<Integer> anni=new LinkedList<>();
+    	
+    	for(Integer i : vertici) {
+    		anni.add(i);
+    	}
+    	
+    	Collections.sort(anni);
+    	
+    	cmbAnno.getItems().addAll(anni);
+    	
+    	btnDettagli.setDisable(false);
+     }
 
-    }
 
     @FXML
     void handleDettagli(ActionEvent event) {
+    	
+        Integer anno = cmbAnno.getValue() ;
+     	
+     	if(anno==null) {
+     		txtResult.setText("Inserire un anno.\n");
+     		return ;
+     	}
+     	
+     	List<Dettaglio> dettagli = new LinkedList<>();
+     	List<Pair<Integer, Double>> coppie= new LinkedList<>();
+     	coppie.addAll(this.model.gPA(anno));
+     	
+//     	for(Integer i : this.model.getVertici()) {
+//     		dettagli.add(new Dettaglio (i, this.model.getPesoArco(anno, i)));
+//     	}
+//     	
+//     	this.txtResult.appendText("Dettagli per l'anno scelto:\n");
+//     	
+//     	for(Dettaglio i : dettagli) {
+//     		this.txtResult.appendText(anno+"<->anno: " +i.getAnno() +"; peso: "+i.getPeso()+ "\n");
+//     	}
+     	
+     	for(Pair<Integer, Double> i : coppie) {
+     		dettagli.add(new Dettaglio (i.getFirst(), i.getSecond()));
+     	}
+     	
+     	this.txtResult.appendText("Dettagli per l'anno scelto:\n");
+     	
+     	Collections.sort(dettagli);
+     	
+     	for(Dettaglio i : dettagli) {
+     		this.txtResult.appendText(anno+"<->anno: " +i.getAnno() +"; peso: "+i.getPeso()+ "\n");
+     	}
 
     }
 
@@ -75,6 +146,12 @@ public class FXMLController {
 
     public void setModel(Model model) {
         this.model = model;
+        
+        btnDettagli.setDisable(true);
+        btnSimula.setDisable(true);
+        
+        cmbSquadra.getItems().addAll(this.model.getNomiTeams());
+        
     }
 
 }

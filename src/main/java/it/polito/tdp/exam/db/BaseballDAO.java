@@ -155,5 +155,62 @@ public class BaseballDAO {
 		}
 		return null;
 	}
+	
+	public List<Integer> getAnniPerTeam(String team) {
+		String sql = "select distinct year "
+				+ "from teams "
+				+ "where name=? ";
+		List<Integer> result = new ArrayList<Integer>();
+
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, team);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				result.add(rs.getInt("year"));
+			}
+
+			conn.close();
+			return result;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+	
+	public Integer getPeso(String team, Integer anno1, Integer anno2) {
+		String sql = "select count(distinct p.playerid) as peso "
+				+ "from teams t, appearances a, people p, (select distinct p.* "
+				+ "from teams t, appearances a, people p "
+				+ "where t.name=? and a.year=? and a.playerid=p.playerId and t.id=a.teamid) p2 "
+				+ "where t.name=? and a.year=? and a.playerid=p.playerId and t.id=a.teamid and p.playerid=p2.playerid ";
+		Integer result = 0;
+
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, team);
+			st.setInt(2, anno1);
+			st.setString(3, team);
+			st.setInt(4, anno2);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				result=rs.getInt("peso");
+			}
+
+			conn.close();
+			return result;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
 
 }
